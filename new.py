@@ -4,16 +4,16 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import io
 import os
+
 # Model training
 def train_model():
     csv_path = 'heart.csv'
     if not os.path.exists(csv_path):
         csv_path = 'heartproject/heart.csv'
-    
-    st.write(f"Using file: {csv_path}")
+    # st.write(f"Using file: {csv_path}")
     
     df = pd.read_csv(csv_path)
-    st.write("CSV file loaded successfully")
+    # st.write("CSV file loaded successfully")
     
     X = df.drop(['target'], axis=1)
     y = df["target"]
@@ -32,7 +32,7 @@ def train_model():
     )
 
     model.fit(x_train, y_train)
-    st.write("Model trained")
+    # st.write("Model trained")
 
     acc = model.score(x_val, y_val)
     st.success(f"Model Accuracy: {acc * 100:.2f}% ")
@@ -40,3 +40,43 @@ def train_model():
     return model
 
 st.session_state.model = train_model()
+
+# UI 
+st.set_page_config(page_title="Heart Predictor", layout="wide")
+
+st.title("HEART DISEASE PREDICTION SYSTEM")
+st.divider()
+
+col1, spacer, col2 = st.columns([1, 0.3, 1.2], gap="large")
+
+with col1:
+    st.subheader("Patient Clinical Data")
+
+    age = st.number_input("Age", 1, 120, 50)
+    gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Male" if x==1 else "Female")
+    
+    cp = st.selectbox("Chest Pain Type", [0,1,2,3],
+        format_func=lambda x: ["Asymptomatic", "Atypical Angina", "Non-Anginal Pain", "Typical Angina"][x])
+
+    trestbps = st.number_input("Resting BP", 50, 250, 120)
+    chol = st.number_input("Cholesterol", 100, 600, 200)
+    fbs = st.selectbox("Fasting Blood Sugar", [0,1],
+        format_func=lambda x: "<120 mg/dl" if x==0 else "≥120 mg/dl")
+
+    restecg = st.selectbox("Resting ECG", [0,1,2],
+        format_func=lambda x: ["Normal", "ST-T Wave Abnormality", "Left Ventricular Hypertrophy"][x])
+
+    thalach = st.number_input("Max Heart Rate", 50, 220, 150)
+
+    exang = st.selectbox("Exercise Angina", [0,1],
+        format_func=lambda x: "No" if x==0 else "Yes")
+
+    oldpeak = st.number_input("Oldpeak", 0.0, 6.0, 1.2)
+
+    slope = st.selectbox("Slope", [0,1,2],
+        format_func=lambda x: ["Upsloping", "Flat", "Downsloping"][x])
+
+    thal = st.selectbox("Thalassemia", [0,1,2],
+        format_func=lambda x: ["Normal", "Fixed Defect", "Reversible Defect"][x])
+
+    analyze_btn = st.button("RUN DIAGNOSTIC ANALYSIS")
