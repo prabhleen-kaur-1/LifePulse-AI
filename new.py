@@ -53,7 +53,7 @@ with col1:
     st.subheader("Patient Clinical Data")
 
     age = st.number_input("Age", 1, 120, 50)
-    gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Male" if x==1 else "Female")
+    gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Male" if x==0 else "Female")
     
     cp = st.selectbox("Chest Pain Type", [0,1,2,3],
         format_func=lambda x: ["Asymptomatic", "Atypical Angina", "Non-Anginal Pain", "Typical Angina"][x])
@@ -64,19 +64,46 @@ with col1:
         format_func=lambda x: "<120 mg/dl" if x==0 else "≥120 mg/dl")
 
     restecg = st.selectbox("Resting ECG", [0,1,2],
-        format_func=lambda x: ["Normal", "ST-T Wave Abnormality", "Left Ventricular Hypertrophy"][x])
+        format_func=lambda x: ["Normal", "ST-T Wave Abnormality", "LV Hypertrophy"][x])
 
     thalach = st.number_input("Max Heart Rate", 50, 220, 150)
 
     exang = st.selectbox("Exercise Angina", [0,1],
         format_func=lambda x: "No" if x==0 else "Yes")
 
-    oldpeak = st.number_input("Oldpeak", 0.0, 6.0, 1.2)
+    oldpeak = st.number_input("Oldpeak", 0.0, 6.0, 1.0)
 
     slope = st.selectbox("Slope", [0,1,2],
         format_func=lambda x: ["Upsloping", "Flat", "Downsloping"][x])
+
+    ca = st.slider("Major Vessels", 0, 3, 0)
 
     thal = st.selectbox("Thalassemia", [0,1,2],
         format_func=lambda x: ["Normal", "Fixed Defect", "Reversible Defect"][x])
 
     analyze_btn = st.button("RUN DIAGNOSTIC ANALYSIS")
+    
+# Report
+if analyze_btn:
+
+    feature_list = ['age','gender','cp','trestbps','chol','fbs','restecg',
+                    'thalach','exang','oldpeak','slope','ca','thal']
+
+    input_df = pd.DataFrame([[age, gender, cp, trestbps, chol, fbs,
+                              restecg, thalach, exang, oldpeak,
+                              slope, ca, thal]], columns=feature_list)
+
+    prob = st.session_state.model.predict_proba(input_df)[0][1]
+    risk_percent = round(prob * 100, 2)
+
+    cp_label = ["Asymptomatic", "Atypical Angina", "Non-Anginal Pain", "Typical Angina"][cp]
+    restecg_label = ["Normal", "ST-T Wave Abnormality", "LV Hypertrophy"][restecg]
+    slope_label = ["Upsloping", "Flat", "Downsloping"][slope]
+    thal_label = ["Normal", "Fixed Defect", "Reversible Defect"][thal]
+
+    if risk_percent >= 70:
+        status = "🔴 Very High Risk! Immediate medical attention required."
+    elif risk_percent >= 40:
+        status = "🟠 Moderate Risk. Lifestyle changes recommended."
+    else:
+        status = "🟢 Low Risk. Maintain healthy habits."
