@@ -4,6 +4,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import io
 import os
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
 # Model training
 def train_model():
@@ -35,7 +38,7 @@ def train_model():
     # st.write("Model trained")
 
     acc = model.score(x_val, y_val)
-    st.success(f"Model Accuracy: {acc * 100:.2f}% ")
+    print(f"\n[SYSTEM] Model Accuracy: {acc * 100:.2f}%\n")
 
     return model
 
@@ -47,7 +50,7 @@ st.set_page_config(page_title="Heart Predictor", layout="wide")
 st.title("HEART DISEASE PREDICTION SYSTEM")
 st.divider()
 
-col1, spacer, col2 = st.columns([1, 0.3, 1.2], gap="large")
+col1, spacer, col2 = st.columns([1, 0.3, 1.2])
 
 with col1:
     st.subheader("Patient Clinical Data")
@@ -64,7 +67,7 @@ with col1:
         format_func=lambda x: "<120 mg/dl" if x==0 else "≥120 mg/dl")
 
     restecg = st.selectbox("Resting ECG", [0,1,2],
-        format_func=lambda x: ["Normal", "ST-T Wave Abnormality", "LV Hypertrophy"][x])
+        format_func=lambda x: ["Normal", "ST-T Wave Abnormality", "Left Ventricular Hypertrophy"][x])
 
     thalach = st.number_input("Max Heart Rate", 50, 220, 150)
 
@@ -82,6 +85,28 @@ with col1:
         format_func=lambda x: ["Normal", "Fixed Defect", "Reversible Defect"][x])
 
     analyze_btn = st.button("RUN DIAGNOSTIC ANALYSIS")
+
+# PDF
+def create_pdf(text):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, 750, "HEART HEALTH REPORT")
+
+    p.setFont("Courier", 10)
+    y = 650
+
+    for line in text.split("\n"):
+        p.drawString(50, y, line)
+        y -= 15
+        if y < 50:
+            p.showPage()
+            y = 650
+
+    p.save()
+    buffer.seek(0)
+    return buffer
     
 # Report
 if analyze_btn:
@@ -89,8 +114,7 @@ if analyze_btn:
     feature_list = ['age','gender','cp','trestbps','chol','fbs','restecg',
                     'thalach','exang','oldpeak','slope','ca','thal']
 
-    input_df = pd.DataFrame([[age, gender, cp, trestbps, chol, fbs,
-                              restecg, thalach, exang, oldpeak,
+    input_df = pd.DataFrame([[age, gender, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak,
                               slope, ca, thal]], columns=feature_list)
 
     prob = st.session_state.model.predict_proba(input_df)[0][1]
@@ -137,5 +161,12 @@ if analyze_btn:
     """
     with col2:
         st.subheader("Diagnostic Report")
-        # st.markdown(report_text, unsafe_allow_html=True)
         st.text(report_text)
+        
+        pdf = create_pdf(report_text.replace("<br>", "\n").replace("<hr>", ""))
+        st.download_button("DOWNLOAD PDF", pdf, file_name="report.pdf")
+
+else:
+    with col2:
+        st.info("Enter data and click analysis.")
+        
