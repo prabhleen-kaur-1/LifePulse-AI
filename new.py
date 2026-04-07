@@ -102,8 +102,40 @@ if analyze_btn:
     thal_label = ["Normal", "Fixed Defect", "Reversible Defect"][thal]
 
     if risk_percent >= 70:
-        status = "🔴 Very High Risk! Immediate medical attention required."
+        status = "Very High Risk! Immediate medical attention required."
     elif risk_percent >= 40:
-        status = "🟠 Moderate Risk. Lifestyle changes recommended."
+        status = "Moderate Risk. Lifestyle changes recommended."
     else:
-        status = "🟢 Low Risk. Maintain healthy habits."
+        status = "Low Risk. Maintain healthy habits."
+
+    report_text = f"""
+    HEART HEALTH REPORT
+
+    -----------------------------
+    PATIENT DETAILS
+    -----------------------------
+    Age: {age} years
+    Gender: {"Male" if gender == 0 else "Female"}
+    Chest Pain Type: {cp_label}
+    Resting BP: {trestbps} mm Hg
+    Cholesterol: {chol} mg/dl
+    Fasting Blood Sugar: {"≥120 mg/dl" if fbs == 1 else "<120 mg/dl"}
+    Resting ECG: {restecg_label}
+    Max Heart Rate: {thalach} bpm
+    Exercise Angina: {"Yes" if exang == 1 else "No"}
+    ST Depression: {oldpeak}
+    Slope: {slope_label}
+    Major Vessels: {ca}
+    Thalassemia: {thal_label}
+
+    -----------------------------
+    DIAGNOSIS RESULT 
+    -----------------------------
+    Risk Percentage: {risk_percent}%
+
+    {status}
+    """
+    with col2:
+        st.subheader("Diagnostic Report")
+        # st.markdown(report_text, unsafe_allow_html=True)
+        st.text(report_text)
